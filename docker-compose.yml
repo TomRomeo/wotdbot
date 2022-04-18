@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  wotdbot:
+    build:
+      context: .
+    container_name: wotdbot
+    restart: always
+    environment:
+      BUILD: 'PROD'
+      DISCORD_TOKEN:
+      POSTGRES_HOST: 'db'
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
