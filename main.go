@@ -147,14 +147,6 @@ func (wotd *wotdbot) sendWOTDMessage() {
 		// get wotd JMdict entry
 		wordOfTheDay := wotd.getWOTD()
 
-		examples := make([]string, len(wordOfTheDay.Sense[0].Examples))
-		for i, e := range wordOfTheDay.Sense[0].Examples {
-			examples[i] = fmt.Sprintf(
-				`%s
-			|| %s ||
-			`, e.Sentences[0].Text, e.Sentences[1].Text)
-		}
-
 		var meanings = make([]string, len(wordOfTheDay.Sense))
 		for i, s := range wordOfTheDay.Sense {
 			meanings[i] = s.Glossary[0].Content
@@ -177,14 +169,13 @@ func (wotd *wotdbot) sendWOTDMessage() {
 					Value:  strings.Join(meanings, "\n"),
 					Inline: false,
 				},
-				{
-					Name:   "Examples",
-					Value:  strings.Join(examples, "\n"),
-					Inline: false,
-				},
 			},
 			Color: 0x7289DA,
 		}
+
+		// add fields to embed
+		addUsage(embed, wordOfTheDay)
+		addExamples(embed, wordOfTheDay)
 
 		content := "Check out the word of the day:"
 
@@ -203,10 +194,42 @@ func (wotd *wotdbot) sendWOTDMessage() {
 
 }
 
-func (wotd *wotdbot) getWOTD() jmdict.JmdictEntry {
+func (wotd *wotdbot) getWOTD() *jmdict.JmdictEntry {
 
 	rand.Seed(time.Now().Unix())
 	r := rand.Intn(len(wotd.JMdict.Entries))
 
-	return wotd.JMdict.Entries[r]
+	return &wotd.JMdict.Entries[r]
+}
+
+func addExamples(e *discordgo.MessageEmbed, wotd *jmdict.JmdictEntry) {
+
+	examples := make([]string, len(wotd.Sense[0].Examples))
+	for i, e := range wotd.Sense[0].Examples {
+		examples[i] = fmt.Sprintf(
+			`%s
+			|| %s ||
+			`, e.Sentences[0].Text, e.Sentences[1].Text)
+	}
+
+	if len(wotd.Sense[0].Examples) != 0 {
+		e.Fields = append(e.Fields,
+			&discordgo.MessageEmbedField{
+				Name:   "Examples",
+				Value:  strings.Join(examples, "\n"),
+				Inline: false,
+			})
+	}
+}
+
+func addUsage(e *discordgo.MessageEmbed, wotd *jmdict.JmdictEntry) {
+
+	if len(wotd.Sense[0].PartsOfSpeech) != 0 {
+		e.Fields = append(e.Fields,
+			&discordgo.MessageEmbedField{
+				Name:   "Usage",
+				Value:  strings.Join(wotd.Sense[0].PartsOfSpeech, "\n"),
+				Inline: true,
+			})
+	}
 }
